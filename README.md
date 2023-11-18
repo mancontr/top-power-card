@@ -33,6 +33,7 @@ A comprehensive list of available options is provided below:
 
 | Field          | Required | Description |
 |----------------|----------|-------------|
+| title          | No       | Card title override. |
 | total          | Yes      | Sensor for total home consumption. |
 | sections       | Yes      | Override the modal column titles. |
 | limit          | No       | Max number of sections to show (or 0 for unlimited). |

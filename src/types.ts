@@ -3,6 +3,7 @@ import { HomeAssistant } from "custom-card-helpers"
 export interface TopPowerCardConfig {
   total: string
   sections: string[]
+  title?: string
   limit?: number
   idle_threshold?: number
   high_threshold?: number

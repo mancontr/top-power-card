@@ -38,34 +38,47 @@ class TopPowerCard extends LitElement {
   render() {
     if (!this.hass || !this.config) return html``
 
-    const sections = this.config.sections.slice()
-    sections.sort((a, b) => parseFloat(this.hass.states[a].state) > parseFloat(this.hass.states[b].state) ? 1 : -1)
+    const title = this.config.title || this.L('title')
+
+    const entries = this.config.sections.map(device => ({
+      device,
+      value: parseFloat(this.hass.states[device].state)
+    }))
+    entries.sort((a, b) => a.value > b.value ? -1 : 1)
+    if (this.config.limit > 0) {
+      entries.splice(this.config.limit, entries.length - this.config.limit)
+    }
 
     return html`
       <ha-card>
+        <header>
+          <h1>
+            ${title}
+          </h1>
+        </header>
         <main>
-          ${this.renderEntry(this.config.total)}
-          ${sections.map(s => this.renderEntry(s))}
+          ${this.renderEntry(this.config.total, true)}
+          ${entries.map(e => this.renderEntry(e.device))}
         </main>
       </ha-card>
     `
   }
 
-  renderEntry(device: string) {
-    const name = this.hass.entities[device].name || device
+  renderEntry(device: string, isTotal?: boolean) {
     const state = this.hass.states[device]
+    const name = this.hass.entities[device].name || state.attributes?.friendly_name || device
     const value = parseFloat(state.state)
-    const status = value < (this.config.idle_threshold || 5)
-      ? 'idle'
-      : (value > (this.config.high_threshold || 300)
-        ? 'high'
-        : 'normal'
-      )
+    let status = 'normal'
+    if (value < (this.config.idle_threshold || 5)) status = 'idle'
+    if (value > (this.config.high_threshold || 300)) status = 'high'
+    if (isNaN(value)) status = 'idle'
+    if (isTotal) status = 'total'
+
     return html`
       <div class="section-entry ${status}">
         <div class="section-icon"><ha-icon icon="mdi:flash"></ha-icon></div>
         <div class="section-title">${name}</div>
-        <div class="section-value">${value} W</div>
+        <div class="section-value">${!isNaN(value) ? value + ' W' : '--'}</div>
       </div>
     `
   }
@@ -75,16 +88,51 @@ class TopPowerCard extends LitElement {
       ha-card {
         color: var(--primary-text-color,inherit);
       }
+      header {
+        padding: 22px 16px 0;
+      }
+      h1 {
+        color: var(--ha-card-header-color,--primary-text-color);
+        font-family: var(--ha-card-header-font-family,inherit);
+        font-size: var(--ha-card-header-font-size,24px);
+        letter-spacing: -0.012em;
+        line-height: 24px;
+        font-weight: 400;
+        margin: 0;
+      }
+      main {
+        padding: 16px;
+      }
       .section-entry {
         display: flex;
-        color: var(--state-switch-on-color, var(--state-switch-active-color, var(--state-active-color)));
-        --mdc-icon-size: 32px;
+        align-items: center;
+        margin: 8px 0;
       }
-      .section-entry.idle {
-        color: var(--state-switch-off-color, var(--state-switch-inactive-color, var(--state-inactive-color)));
+      .section-icon {
+        --mdc-icon-size: 24px;
+        color: var(--paper-item-icon-color);
+        height: 40px;
+        width: 40px;
+        line-height: 40px;
+        text-align: center;
+      }
+      .section-entry.idle .section-icon {
+        color: var(--state-unavailable-color);
+      }
+      .section-entry.high .section-icon {
+        color: #e35757;
       }
       .section-title {
         flex: 1 1 auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin: 0 8px 0 16px;
+      }
+      .section-entry.idle .section-title {
+        opacity: 0.7;
+      }
+      .section-value {
+        flex: 0 0 auto;
       }
     `
   }

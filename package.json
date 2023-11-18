@@ -1,6 +1,6 @@
 {
   "name": "top-power-card",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Home Assistant card to show top power usage devices",
   "keywords": [
     "home-assistant",
