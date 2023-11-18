@@ -1,6 +1,6 @@
 import { html, css, LitElement } from "lit"
 import L from "./intl"
-import { ExtendedHomeAssistant, TopPowerCardConfig } from "./types"
+import { CircuitEntry, ExtendedHomeAssistant, TopPowerCardConfig } from "./types"
 
 class TopPowerCard extends LitElement {
   config: TopPowerCardConfig
@@ -40,9 +40,9 @@ class TopPowerCard extends LitElement {
 
     const title = this.config.title || this.L('title')
 
-    const entries = this.config.sections.map(device => ({
+    const entries = this.config.circuits.map(device => ({
       device,
-      value: parseFloat(this.hass.states[device].state)
+      value: parseFloat(this.hass.states[device.entity].state)
     }))
     entries.sort((a, b) => a.value > b.value ? -1 : 1)
     if (this.config.limit > 0) {
@@ -64,9 +64,9 @@ class TopPowerCard extends LitElement {
     `
   }
 
-  renderEntry(device: string, isTotal?: boolean) {
-    const state = this.hass.states[device]
-    const name = this.hass.entities[device].name || state.attributes?.friendly_name || device
+  renderEntry(device: CircuitEntry, isTotal?: boolean) {
+    const state = this.hass.states[device.entity]
+    const name = device.name || this.hass.entities[device.entity].name || state.attributes?.friendly_name || device
     const value = parseFloat(state.state)
     let status = 'normal'
     if (value < (this.config.idle_threshold || 5)) status = 'idle'
