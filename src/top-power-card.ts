@@ -69,8 +69,10 @@ class TopPowerCard extends LitElement {
     const name = device.name || this.hass.entities[device.entity].name || state.attributes?.friendly_name || device
     const value = parseFloat(state.state)
     let status = 'normal'
-    if (value < (this.config.idle_threshold || 5)) status = 'idle'
-    if (value > (this.config.high_threshold || 300)) status = 'high'
+    const idleThreshold = device.idle_threshold || this.config.idle_threshold || 5
+    const highThreshold = device.high_threshold || this.config.high_threshold || 300
+    if (value < idleThreshold) status = 'idle'
+    if (value > highThreshold) status = 'high'
     if (isNaN(value)) status = 'idle'
     if (isTotal) status = 'total'
 
